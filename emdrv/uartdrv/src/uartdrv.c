@@ -2258,6 +2258,25 @@ Ecode_t UARTDRV_TransmitB(UARTDRV_Handle_t handle,
   {
     EMU_EnterEM1();
   }
+
+  // Wait for the TXC flag
+  if (handle->type == uartdrvUartTypeUart)
+  {
+    while (0 == (handle->peripheral.uart->STATUS & USART_STATUS_TXC))
+    {
+    }
+  }
+  else if (handle->type == uartdrvUartTypeLeuart)
+  {
+    while (0 == (handle->peripheral.leuart->STATUS & LEUART_STATUS_TXC))
+    {
+    }
+  }
+  else
+  {
+    EFM_ASSERT(false);
+  }
+
   return queueBuffer->transferStatus;
 }
 
