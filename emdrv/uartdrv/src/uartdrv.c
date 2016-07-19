@@ -42,6 +42,11 @@ static bool TransmitDmaComplete(unsigned int channel,
                                 unsigned int sequenceNo,
                                 void *userParam);
 
+static void EnableTransmitter(UARTDRV_Handle_t handle);
+static void DisableTransmitter(UARTDRV_Handle_t handle);
+static void EnableReceiver(UARTDRV_Handle_t handle);
+static void DisableReceiver(UARTDRV_Handle_t handle);
+
 /***************************************************************************//**
  * @brief Get UARTDRV_Handle_t from GPIO pin number (HW FC CTS pin interrupt)
  ******************************************************************************/
@@ -255,11 +260,18 @@ inline static bool IsHalfDuplexMode(UARTDRV_Handle_t handle)
  ******************************************************************************/
 static void EnableTransmitter(UARTDRV_Handle_t handle)
 {
+  // In half-duplex mode, assume we do not want to receive what we are sending
+  if (IsHalfDuplexMode(handle)) {
+      DisableReceiver(handle);
+  }
+
   if (handle->type == uartdrvUartTypeUart)
   {
+    // Enable TX
     handle->peripheral.uart->CMD = USART_CMD_TXEN;
     // Wait for TX to be enabled
-    while (!(handle->peripheral.uart->STATUS & USART_STATUS_TXENS));
+    while (!(handle->peripheral.uart->STATUS & USART_STATUS_TXENS)) { }
+
 #if defined(USART_ROUTEPEN_TXPEN)
     handle->peripheral.uart->ROUTEPEN |= USART_ROUTEPEN_TXPEN;
 #else
@@ -268,9 +280,14 @@ static void EnableTransmitter(UARTDRV_Handle_t handle)
   }
   else if (handle->type == uartdrvUartTypeLeuart)
   {
+    // Wait until the LEUART can accept the command
+    while (handle->peripheral.leuart->SYNCBUSY) { }
+
+    // Enable TX
     handle->peripheral.leuart->CMD = LEUART_CMD_TXEN;
     // Wait for TX to be enabled
-    while (!(handle->peripheral.leuart->STATUS & LEUART_STATUS_TXENS));
+    while (!(handle->peripheral.leuart->STATUS & LEUART_STATUS_TXENS)) { }
+
 #if defined(LEUART_ROUTEPEN_TXPEN)
     handle->peripheral.leuart->ROUTEPEN |= LEUART_ROUTEPEN_TXPEN;
 #else
@@ -295,6 +312,9 @@ static void DisableTransmitter(UARTDRV_Handle_t handle)
   }
   else if (handle->type == uartdrvUartTypeLeuart)
   {
+    // Wait until the LEUART can accept the command
+    while (handle->peripheral.leuart->SYNCBUSY) { }
+
 #if defined(LEUART_ROUTEPEN_TXPEN)
     handle->peripheral.leuart->ROUTEPEN &= ~LEUART_ROUTEPEN_TXPEN;
 #else
@@ -309,11 +329,18 @@ static void DisableTransmitter(UARTDRV_Handle_t handle)
  ******************************************************************************/
 static void EnableReceiver(UARTDRV_Handle_t handle)
 {
+  // In half-duplex mode, assume we do not want to receive what we are sending
+  if (IsHalfDuplexMode(handle)) {
+      DisableTransmitter(handle);
+  }
+
   if (handle->type == uartdrvUartTypeUart)
   {
+    // Enable RX
     handle->peripheral.uart->CMD = USART_CMD_RXEN;
     // Wait for RX to be enabled
-    while (!(handle->peripheral.uart->STATUS & USART_STATUS_RXENS));
+    while (!(handle->peripheral.uart->STATUS & USART_STATUS_RXENS)) { }
+
 #if defined(USART_ROUTEPEN_RXPEN)
     handle->peripheral.uart->ROUTEPEN |= USART_ROUTEPEN_RXPEN;
 #else
@@ -322,9 +349,13 @@ static void EnableReceiver(UARTDRV_Handle_t handle)
   }
   else if (handle->type == uartdrvUartTypeLeuart)
   {
+    // Wait until the LEUART can accept the command
+    while (handle->peripheral.leuart->SYNCBUSY) { }
+    // Enable RX
     handle->peripheral.leuart->CMD = LEUART_CMD_RXEN;
     // Wait for RX to be enabled
-    while (!(handle->peripheral.leuart->STATUS & USART_STATUS_RXENS));
+    while (!(handle->peripheral.leuart->STATUS & USART_STATUS_RXENS)) { }
+
 #if defined(USART_ROUTEPEN_RXPEN)
     handle->peripheral.leuart->ROUTEPEN |= USART_ROUTEPEN_RXPEN;
 #else
@@ -349,6 +380,9 @@ static void DisableReceiver(UARTDRV_Handle_t handle)
   }
   else if (handle->type == uartdrvUartTypeLeuart)
   {
+    // Wait until the LEUART can accept the command
+    while (handle->peripheral.leuart->SYNCBUSY) { }
+
 #if defined(LEUART_ROUTEPEN_RXPEN)
     handle->peripheral.leuart->ROUTEPEN &= ~LEUART_ROUTEPEN_RXPEN;
 #else
