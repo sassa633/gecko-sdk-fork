@@ -220,6 +220,7 @@ typedef struct
   uint8_t                    portLocationCts;   ///< Location number for UART CTS pin.
   uint8_t                    portLocationRts;   ///< Location number for UART RTS pin.
 #endif
+  uint32_t                   extraCtrlFlags;    ///< Extra flags for the CTRL register
 } UARTDRV_InitUart_t;
 
 /// @cond DO_NOT_INCLUDE_WITH_DOXYGEN
@@ -252,6 +253,7 @@ typedef struct
   uint8_t                    rtsPin;            ///< RTS pin number
   UARTDRV_Buffer_FifoQueue_t *rxQueue;          ///< Receive operation queue
   UARTDRV_Buffer_FifoQueue_t *txQueue;          ///< Transmit operation queue
+  uint32_t                   extraCtrlFlags;    ///< Extra flags for the CTRL register
 } UARTDRV_InitLeuart_t;
 
 /// UART driver instance handle data structure.

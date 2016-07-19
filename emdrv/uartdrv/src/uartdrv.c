@@ -1043,6 +1043,7 @@ Ecode_t UARTDRV_InitUart(UARTDRV_Handle_t handle,
   // RX/TX enable is done on demand
   usartInit.enable = usartDisable;
   USART_InitAsync(initData->port, &usartInit);
+  initData->port->CTRL |= initData->extraCtrlFlags;
 
 #if defined(USART_ROUTEPEN_TXPEN)
   initData->port->ROUTEPEN = USART_ROUTEPEN_TXPEN
@@ -1261,6 +1262,7 @@ Ecode_t UARTDRV_InitLeuart(UARTDRV_Handle_t handle,
   // RX/TX enable is done on demand
   leuartInit.enable = leuartDisable;
   LEUART_Init(initData->port, &leuartInit);
+  initData->port->CTRL |= initData->extraCtrlFlags;
 
 #if defined(LEUART_ROUTEPEN_TXPEN)
   initData->port->ROUTEPEN = LEUART_ROUTEPEN_TXPEN
