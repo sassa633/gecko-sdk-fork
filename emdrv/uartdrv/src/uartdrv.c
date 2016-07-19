@@ -1515,6 +1515,9 @@ Ecode_t UARTDRV_Abort(UARTDRV_Handle_t handle, UARTDRV_AbortType_t type)
   // Stop DMA transfers.
   if ((type == uartdrvAbortTransmit) || (type == uartdrvAbortAll))
   {
+    // Disable the transmitter
+    DisableTransmitter(handle);
+
     GetTailBuffer(handle->txQueue, &txBuffer);
     DMADRV_StopTransfer(handle->txDmaCh);
     DMADRV_TransferRemainingCount(handle->txDmaCh,
@@ -1542,6 +1545,9 @@ Ecode_t UARTDRV_Abort(UARTDRV_Handle_t handle, UARTDRV_AbortType_t type)
   }
   if ((type == uartdrvAbortReceive) || (type == uartdrvAbortAll))
   {
+    // Disable the receiver
+    DisableReceiver(handle);
+
     GetTailBuffer(handle->rxQueue, &rxBuffer);
     DMADRV_StopTransfer(handle->rxDmaCh);
     DMADRV_TransferRemainingCount(handle->rxDmaCh,
