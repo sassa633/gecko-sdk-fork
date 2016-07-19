@@ -230,6 +230,27 @@ static Ecode_t GetTailBuffer(UARTDRV_Buffer_FifoQueue_t *queue,
 }
 
 /***************************************************************************//**
+ * @brief Check whether the given UARTDRV handle is in half-duplex mode
+ ******************************************************************************/
+inline static bool IsHalfDuplexMode(UARTDRV_Handle_t handle)
+{
+  if (handle->type == uartdrvUartTypeUart)
+  {
+    return 0 != (handle->peripheral.uart->CTRL & USART_CTRL_LOOPBK);
+  }
+  else if (handle->type == uartdrvUartTypeLeuart)
+  {
+    return 0 != (handle->peripheral.leuart->CTRL & LEUART_CTRL_LOOPBK);
+  }
+  else
+  {
+    EFM_ASSERT(false);
+  }
+
+  return false;
+}
+
+/***************************************************************************//**
  * @brief Enable UART transmitter
  ******************************************************************************/
 static void EnableTransmitter(UARTDRV_Handle_t handle)
@@ -778,8 +799,15 @@ static Ecode_t ConfigGpio(UARTDRV_Handle_t handle, bool enable)
 {
   if (enable)
   {
-    GPIO_PinModeSet(handle->txPort, handle->txPin, gpioModePushPull, 1);
-    GPIO_PinModeSet(handle->rxPort, handle->rxPin, gpioModeInputPull, 1);
+    if (IsHalfDuplexMode(handle))
+    {
+      GPIO_PinModeSet(handle->txPort, handle->txPin, gpioModeWiredAndPullUp, 1);
+    }
+    else
+    {
+      GPIO_PinModeSet(handle->txPort, handle->txPin, gpioModePushPull, 1);
+      GPIO_PinModeSet(handle->rxPort, handle->rxPin, gpioModeInputPull, 1);
+    }
 #if (EMDRV_UARTDRV_HW_FLOW_CONTROL_ENABLE)
     if (handle->fcType == uartdrvFlowControlHw)
     {
@@ -796,8 +824,15 @@ static Ecode_t ConfigGpio(UARTDRV_Handle_t handle, bool enable)
   }
   else
   {
-    GPIO_PinModeSet(handle->txPort, handle->txPin, gpioModeDisabled, 0);
-    GPIO_PinModeSet(handle->rxPort, handle->rxPin, gpioModeDisabled, 0);
+    if (IsHalfDuplexMode(handle))
+    {
+      GPIO_PinModeSet(handle->txPort, handle->txPin, gpioModeDisabled, 0);
+    }
+    else
+    {
+      GPIO_PinModeSet(handle->txPort, handle->txPin, gpioModeDisabled, 0);
+      GPIO_PinModeSet(handle->rxPort, handle->rxPin, gpioModeDisabled, 0);
+    }
 #if (EMDRV_UARTDRV_HW_FLOW_CONTROL_ENABLE)
     if (handle->fcType == uartdrvFlowControlHw)
     {
