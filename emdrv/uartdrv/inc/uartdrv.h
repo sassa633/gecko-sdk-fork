@@ -156,6 +156,7 @@ typedef struct
 
 /// Macros to define fifo and buffer queues, can't use a typedef becuase the size
 /// of the fifo array in the queues can change.
+#ifndef __cplusplus
 #define DEFINE_BUF_QUEUE(qSize, qName)  \
 typedef struct {                        \
   uint16_t head;                        \
@@ -171,7 +172,21 @@ static volatile _##qName qName =        \
   .used = 0,                            \
   .size = qSize,                        \
 }
-
+#else
+#define DEFINE_BUF_QUEUE(qSize, qName)  \
+typedef struct _##qName {               \
+  uint16_t head;                        \
+  uint16_t tail;                        \
+  volatile uint16_t used;               \
+  uint16_t size;                        \
+  UARTDRV_Buffer_t fifo[qSize];         \
+  _##qName() {                          \
+      memset(this, 0, sizeof(_##qName));\
+      this->size = qSize;               \
+  }                                     \
+} _##qName;                             \
+static volatile _##qName qName
+#endif
 
 /// UART driver instance initialization structure.
 /// This data structure contains a number of UARTDRV configuration options
