@@ -399,6 +399,7 @@ static void StartTransmitDma(UARTDRV_Handle_t handle,
                              UARTDRV_Buffer_t *buffer)
 {
   void *txPort = NULL;
+  uint32_t txState;
 
   handle->txDmaActive = true;
   if (handle->type == uartdrvUartTypeUart)
@@ -413,6 +414,24 @@ static void StartTransmitDma(UARTDRV_Handle_t handle,
   {
     handle->txDmaActive = false;
     return;
+  }
+
+  if (handle->type == uartdrvUartTypeUart)
+  {
+    txState = (handle->peripheral.uart->STATUS & USART_STATUS_TXENS);
+  }
+  else if (handle->type == uartdrvUartTypeLeuart)
+  {
+    txState = (handle->peripheral.leuart->STATUS & LEUART_STATUS_TXENS);
+  }
+  else
+  {
+    EFM_ASSERT(false);
+    txState = 0;
+  }
+  if (!txState)
+  {
+    EnableTransmitter(handle);
   }
 
   DMADRV_MemoryPeripheral(handle->txDmaCh,
