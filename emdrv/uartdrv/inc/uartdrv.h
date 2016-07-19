@@ -144,7 +144,14 @@ typedef struct
   volatile uint16_t tail;                  ///< Index of where to enqueue next message.
   volatile uint16_t used;                  ///< Number of bytes queued.
   const uint16_t size;                     ///< Size of FIFO.
+#ifdef __GNUG__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
   UARTDRV_Buffer_t fifo[];                 ///< FIFO of queue data.
+#ifdef __GNUG__
+#pragma GCC diagnostic pop
+#endif
 } UARTDRV_Buffer_FifoQueue_t;
 
 /// Macros to define fifo and buffer queues, can't use a typedef becuase the size
