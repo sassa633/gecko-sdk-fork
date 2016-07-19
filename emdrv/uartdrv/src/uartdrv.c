@@ -1477,6 +1477,18 @@ Ecode_t UARTDRV_Abort(UARTDRV_Handle_t handle, UARTDRV_AbortType_t type)
                          NULL,
                          txBuffer->itemsRemaining);
     }
+    
+    // Set the DMA active flag to false, otherwise a new transmit can't start
+    handle->txDmaActive = false;
+    // Dequeue the current buffer
+    DequeueBuffer(handle->txQueue, &txBuffer);
+
+    // Dequeue all the TX buffers to abort all transmit operations
+    while (handle->txQueue->used > 0)
+    {
+      GetTailBuffer(handle->txQueue, &txBuffer);
+      DequeueBuffer(handle->txQueue, &txBuffer);
+    }
   }
   if ((type == uartdrvAbortReceive) || (type == uartdrvAbortAll))
   {
@@ -1491,6 +1503,18 @@ Ecode_t UARTDRV_Abort(UARTDRV_Handle_t handle, UARTDRV_AbortType_t type)
                          ECODE_EMDRV_UARTDRV_ABORTED,
                          NULL,
                          rxBuffer->itemsRemaining);
+    }
+
+    // Set the DMA active flag to false, otherwise a new receive can't start
+    handle->rxDmaActive = false;
+    // Dequeue the current buffer
+    DequeueBuffer(handle->rxQueue, &rxBuffer);
+
+    // Dequeue all the TX buffers to abort all receive operations
+    while (handle->txQueue->used > 0)
+    {
+      GetTailBuffer(handle->rxQueue, &rxBuffer);
+      DequeueBuffer(handle->rxQueue, &rxBuffer);
     }
   }
   INT_Enable();
