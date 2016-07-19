@@ -815,6 +815,8 @@ static Ecode_t ConfigGpio(UARTDRV_Handle_t handle, bool enable)
   return ECODE_EMDRV_UARTDRV_OK;
 }
 
+#if EMDRV_UARTDRV_HW_FLOW_CONTROL_ENABLE
+
 /***************************************************************************//**
  * @brief Set index into handle pointer array.
  ******************************************************************************/
@@ -852,6 +854,8 @@ static Ecode_t SetHandleIndex(UARTDRV_Handle_t handle)
   return ECODE_EMDRV_UARTDRV_OK;
 }
 
+#endif
+
 /***************************************************************************//**
  * @brief Initialize FIFO queues for a handle.
  ******************************************************************************/
@@ -874,6 +878,8 @@ static void InitializeQueues(UARTDRV_Handle_t handle,
   handle->IgnoreRestrain = false;
 }
 
+#if EMDRV_UARTDRV_HW_FLOW_CONTROL_ENABLE
+
 /***************************************************************************//**
  * @brief Initialize GPIO-driven flow control.
  ******************************************************************************/
@@ -886,6 +892,8 @@ static void InitializeGpioFlowControl(UARTDRV_Handle_t handle)
   handle->fcSelfCfg = uartdrvFlowControlAuto;
   FcApplyState(handle);
 }
+
+#endif
 
 /***************************************************************************//**
  * @brief Initialize DMA channels for a handle.
