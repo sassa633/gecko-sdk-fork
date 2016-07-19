@@ -1254,17 +1254,14 @@ Ecode_t UARTDRV_InitLeuart(UARTDRV_Handle_t handle,
   CMU_ClockEnable(cmuClock_GPIO, true);
   CMU_ClockEnable(cmuClock_HFLE, true);
 
-  if (leuartInit.baudrate <= 9600)
+  // Get information about the LFXO so that we can decide which clock we can use with UART
+  bool lfxoEnabled = (0 != (CMU->STATUS & CMU_STATUS_LFXOENS));
+  uint32_t lfxoClock = lfxoEnabled ? SystemLFXOClockGet() : 0;
+
+  // Use LFXO if it is enabled and the baud rate is lower or equal to the LFXO frequency
+  if (lfxoEnabled && (leuartInit.baudrate <= lfxoClock))
   {
-    // Need to use LFCLK branch to get these low baudrates
-    if (CMU->STATUS & CMU_STATUS_LFXOENS)
-    {
-      CMU_ClockSelectSet(cmuClock_LFB, cmuSelect_LFXO);
-    }
-    else
-    {
-      return ECODE_EMDRV_UARTDRV_CLOCK_ERROR;
-    }
+    CMU_ClockSelectSet(cmuClock_LFB, cmuSelect_LFXO);
   }
   else
   {
