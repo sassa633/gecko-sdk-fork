@@ -532,7 +532,7 @@ static bool ReceiveDmaComplete(unsigned int channel,
 
   if (buffer->callback != NULL)
   {
-    buffer->callback(handle, buffer->transferStatus, buffer->data, buffer->transferCount - buffer->itemsRemaining);
+    buffer->callback(handle, buffer->transferStatus, buffer->data, buffer->transferCount - buffer->itemsRemaining, buffer->userParam);
   }
   // Dequeue the current tail RX operation, check if more in queue
   DequeueBuffer(handle->rxQueue, &buffer);
@@ -584,7 +584,7 @@ static bool TransmitDmaComplete(unsigned int channel,
 
   if (buffer->callback != NULL)
   {
-    buffer->callback(handle, ECODE_EMDRV_UARTDRV_OK, buffer->data, buffer->transferCount);
+    buffer->callback(handle, ECODE_EMDRV_UARTDRV_OK, buffer->data, buffer->transferCount, buffer->userParam);
   }
   // Dequeue the current tail TX operation, check if more in queue
   DequeueBuffer(handle->txQueue, &buffer);
@@ -1528,9 +1528,10 @@ Ecode_t UARTDRV_Abort(UARTDRV_Handle_t handle, UARTDRV_AbortType_t type)
       txBuffer->callback(handle,
                          ECODE_EMDRV_UARTDRV_ABORTED,
                          NULL,
-                         txBuffer->itemsRemaining);
+                         txBuffer->itemsRemaining,
+                         txBuffer->userParam);
     }
-    
+
     // Set the DMA active flag to false, otherwise a new transmit can't start
     handle->txDmaActive = false;
     // Dequeue the current buffer
@@ -1558,7 +1559,8 @@ Ecode_t UARTDRV_Abort(UARTDRV_Handle_t handle, UARTDRV_AbortType_t type)
       rxBuffer->callback(handle,
                          ECODE_EMDRV_UARTDRV_ABORTED,
                          NULL,
-                         rxBuffer->itemsRemaining);
+                         rxBuffer->itemsRemaining,
+                         rxBuffer->userParam);
     }
 
     // Set the DMA active flag to false, otherwise a new receive can't start
@@ -2099,13 +2101,16 @@ Ecode_t UARTDRV_PauseTransmit(UARTDRV_Handle_t handle)
  *
  * @param[in]  callback Transfer completion callback.
  *
+ * @param[in] user User parameter that allows the user to pass application-specific data.
+ *
  * @return
  *    @ref ECODE_EMDRV_UARTDRV_OK on success.
  ******************************************************************************/
 Ecode_t UARTDRV_Receive(UARTDRV_Handle_t handle,
                         uint8_t *data,
                         UARTDRV_Count_t count,
-                        UARTDRV_Callback_t callback)
+                        UARTDRV_Callback_t callback,
+                        void *user)
 {
   Ecode_t retVal;
   UARTDRV_Buffer_t outputBuffer;
@@ -2121,6 +2126,7 @@ Ecode_t UARTDRV_Receive(UARTDRV_Handle_t handle,
   outputBuffer.itemsRemaining = count;
   outputBuffer.callback = callback;
   outputBuffer.transferStatus = ECODE_EMDRV_UARTDRV_WAITING;
+  outputBuffer.userParam = user;
 
   retVal = EnqueueBuffer(handle->rxQueue, &outputBuffer, &queueBuffer);
   if (retVal != ECODE_EMDRV_UARTDRV_OK)
@@ -2246,7 +2252,9 @@ Ecode_t UARTDRV_ResumeTransmit(UARTDRV_Handle_t handle)
  *
  * @param[in] count Number of bytes to transmit.
  *
- * @param[in]  callback Transfer completion callback.
+ * @param[in] callback Transfer completion callback.
+ *
+ * @param[in] user User parameter that allows the user to pass application-specific data.
  *
  * @return
  *    @ref ECODE_EMDRV_UARTDRV_OK on success.
@@ -2254,7 +2262,8 @@ Ecode_t UARTDRV_ResumeTransmit(UARTDRV_Handle_t handle)
 Ecode_t UARTDRV_Transmit(UARTDRV_Handle_t handle,
                          uint8_t *data,
                          UARTDRV_Count_t count,
-                         UARTDRV_Callback_t callback)
+                         UARTDRV_Callback_t callback,
+                         void *user)
 {
   Ecode_t retVal;
   UARTDRV_Buffer_t inputBuffer;
@@ -2270,6 +2279,7 @@ Ecode_t UARTDRV_Transmit(UARTDRV_Handle_t handle,
   inputBuffer.itemsRemaining = count;
   inputBuffer.callback = callback;
   inputBuffer.transferStatus = ECODE_EMDRV_UARTDRV_WAITING;
+  inputBuffer.userParam = user;
 
   retVal = EnqueueBuffer(handle->txQueue, &inputBuffer, &queueBuffer);
   if (retVal != ECODE_EMDRV_UARTDRV_OK)

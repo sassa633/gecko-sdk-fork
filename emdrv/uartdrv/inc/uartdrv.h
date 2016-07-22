@@ -125,7 +125,8 @@ struct UARTDRV_HandleData;
 typedef void (*UARTDRV_Callback_t)(struct UARTDRV_HandleData *handle,
                                    Ecode_t transferStatus,
                                    uint8_t *data,
-                                   UARTDRV_Count_t transferCount);
+                                   UARTDRV_Count_t transferCount,
+                                   void *user);
 
 /// UART transfer buffer
 typedef struct
@@ -135,6 +136,7 @@ typedef struct
   volatile UARTDRV_Count_t itemsRemaining; ///< Transfer items remaining
   UARTDRV_Callback_t callback;             ///< Completion callback
   Ecode_t transferStatus;                  ///< Completion status of transfer operation
+  void *userParam;
 } UARTDRV_Buffer_t;
 
 /// Transfer operation FIFO queue typedef
@@ -187,6 +189,7 @@ typedef struct _##qName {               \
 } _##qName;                             \
 static volatile _##qName qName
 #endif
+
 
 /// UART driver instance initialization structure.
 /// This data structure contains a number of UARTDRV configuration options
@@ -325,12 +328,14 @@ uint8_t UARTDRV_GetTransmitDepth(UARTDRV_Handle_t handle);
 Ecode_t UARTDRV_Transmit(UARTDRV_Handle_t handle,
                          uint8_t *data,
                          UARTDRV_Count_t count,
-                         UARTDRV_Callback_t callback);
+                         UARTDRV_Callback_t callback,
+                         void *user);
 
 Ecode_t UARTDRV_Receive(UARTDRV_Handle_t handle,
                         uint8_t *data,
                         UARTDRV_Count_t count,
-                        UARTDRV_Callback_t callback);
+                        UARTDRV_Callback_t callback,
+                        void *user);
 
 Ecode_t UARTDRV_TransmitB(UARTDRV_Handle_t handle,
                           uint8_t *data,
